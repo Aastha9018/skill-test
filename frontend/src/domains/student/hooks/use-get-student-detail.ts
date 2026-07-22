@@ -1,28 +1,13 @@
-import * as React from 'react';
 import { studentFormInitialState } from '../reducer/student-form-reducer';
 import { GetStudentDetailProps } from '../types';
-import { useLazyGetStudentDetailQuery } from '../api/student-api';
+import { useGetStudentDetailQuery } from '../api/student-api';
 
 const initialState: GetStudentDetailProps = { ...studentFormInitialState, id: 0, reporterName: '' };
 export const useGetStudentDetail = (id: string | undefined) => {
-  const [student, setStudent] = React.useState(initialState);
-
-  const [getStudentDetail] = useLazyGetStudentDetailQuery();
-
-  React.useEffect(() => {
-    const fetch = async () => {
-      try {
-        const result = await getStudentDetail(id).unwrap();
-        if (result) {
-          setStudent(result);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetch();
-  }, [id, getStudentDetail]);
-
-  return student;
+  // Subscribe to the live cached query result so the screen updates automatically
+  // when the student is mutated. RTK Query invalidates the STUDENTS tag on update
+  // and refetches; reading `data` here reflects that, unlike a one-time snapshot
+  // copied into local state (which only refreshed when `id` changed).
+  const { data } = useGetStudentDetailQuery(id);
+  return data ?? initialState;
 };
